@@ -3,7 +3,7 @@
  * Plugin Name:       Carolina Election Map
  * Plugin URI:        https://www.johnlocke.org/
  * Description:       Embeds the Carolina Election Map — North Carolina's 2026 U.S. House, U.S. Senate, NC Senate and NC House races, with prediction-market prices, polling averages, fundraising and district demographics. Use the [jce_map] shortcode or the "Carolina Election Map" block.
- * Version:           1.0.3
+ * Version:           1.0.4
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * License:           GPL-2.0-or-later
