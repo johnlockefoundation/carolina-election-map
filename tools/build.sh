@@ -107,6 +107,33 @@ if (bad.length) { console.error("  live data must not be bundled:\n    " + bad.j
 console.log("  no live keys or mock markers bundled across " + fs.readdirSync(dir).length + " races");
 ' "$STAGE/$PLUGIN_SLUG/assets/$PLUGIN_SLUG" || die "the reference layer is carrying live data"
 
+# --- no Pages-only data may be bundled -------------------------------------
+# holder_party and holder_name are read by one component: the General Assembly
+# hemicycle on /seats.html, which is a Pages route and not part of this plugin.
+# The two exports share the payload builders, so a field added for a Pages-only
+# view reaches every WordPress install unless export-reference.mjs names it --
+# and nothing in the plugin's bundle references either name. This fails the
+# package if one slips through, which is the only reliable signal that the list
+# in that exporter is still doing its job.
+node -e '
+const fs = require("fs"), path = require("path");
+const root = process.argv[1];
+const pagesOnly = ["holder_party", "holder_name"];
+const bad = [];
+const walk = (d) => {
+  for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+    const p = path.join(d, e.name);
+    if (e.isDirectory()) { walk(p); continue; }
+    if (!p.endsWith(".json")) continue;
+    const raw = fs.readFileSync(p, "utf8");
+    for (const k of pagesOnly) if (raw.includes("\"" + k + "\"")) bad.push(path.relative(root, p) + ": " + k);
+  }
+};
+walk(root);
+if (bad.length) { console.error("  Pages-only data must not ship in the plugin:\n    " + bad.join("\n    ")); process.exit(1); }
+console.log("  no Pages-only keys in the reference layer");
+' "$STAGE/$PLUGIN_SLUG/assets/$PLUGIN_SLUG/data/reference" || die "the reference layer is carrying Pages-only data"
+
 # --- versions agree --------------------------------------------------------
 for v in "$PLUGIN/package.json"; do
   got="$(grep -m1 -oE '"version":[[:space:]]*"[0-9]+\.[0-9]+\.[0-9]+"' "$v" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)"
